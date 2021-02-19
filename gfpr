@@ -33,8 +33,7 @@ def branch():
   if type == 'b':
     type = 'bug'
 
-  name = args.name.replace(' ', '-')
-  name = name.replace(':', '-').replace('/', '-').lower()
+  name = args.name.replace(' ', '-').replace(':', '-').replace('/', '').lower()
   branch_name = f'{type}/FPRL4-{ticket_num}-{name}'
 
   print(branch_name)
