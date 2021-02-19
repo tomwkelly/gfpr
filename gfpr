@@ -1,0 +1,63 @@
+#!/usr/bin/python3
+
+import argparse
+import subprocess
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('name', help='the name of the branch or commit message')
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('-b', '--branch', action='store_true', help='create new branch')
+group.add_argument('-c', '--commit', action='store_true', help='create new commit')
+parser.add_argument('-a', '--add', action='store_true', help='add all untracked/unstaged files to commit')
+
+args = parser.parse_args()
+
+def run(cmd):
+  return subprocess.run(cmd, check=True, text=True, stdout=subprocess.PIPE).stdout
+
+def branch():
+  types = ['f','b']
+  type = input('Branch type [f|b] <feat|bug>:')
+  
+  if type not in types:
+    print(f'type {type} is not valid, please enter f for feat or b for bug')
+    branch()
+    return
+  
+  ticket_num = input('Ticket number (number after FPRL4-):')
+  
+  if type == 'f':
+    type = 'feat'
+  
+  if type == 'b':
+    type = 'bug'
+
+  name = args.name.replace(' ', '-')
+  name = name.replace(':', '-').replace('/', '-').lower()
+  branch_name = f'{type}/FPRL4-{ticket_num}-{name}'
+
+  print(branch_name)
+
+  run(['git', 'checkout', '-b', branch_name])
+
+def commit():
+  branch_name = run([ 'git', 'symbolic-ref', '--short', 'HEAD' ])
+
+  split_branch = branch_name.split('/') 
+  type=split_branch[0]
+  ticket='-'.join(split_branch[1].split('-', 2)[:2])
+
+  message = f'{type}: {ticket}: {args.name}'
+
+  if args.add:
+    run(['git', 'add', '.'])
+
+  run(['git', 'commit', '-m', f'{message}'])
+  
+if args.branch:
+  branch()
+
+if args.commit:
+  commit()
+
